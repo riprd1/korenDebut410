@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>XリプURLメーカー</title>
+
+  <style>
+    :root{
+      --bg:#f7fbff;
+      --card:rgba(255,255,255,.9);
+      --main:#1d9bf0;
+      --main2:#79cbff;
+      --text:#203040;
+      --muted:#678;
+      --border:#d9ebf8;
+    }
+
+    *{
+      box-sizing:border-box;
+    }
+
+    body{
+      margin:0;
+      min-height:100vh;
+      font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;
+      background:
+        radial-gradient(circle at top left,#dff3ff,transparent 40%),
+        radial-gradient(circle at bottom right,#eaf7ff,transparent 40%),
+        var(--bg);
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      padding:24px;
+      color:var(--text);
+    }
+
+    .card{
+      width:min(720px,100%);
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:28px;
+      padding:28px;
+      box-shadow:0 20px 60px rgba(70,130,180,.18);
+      backdrop-filter:blur(12px);
+    }
+
+    h1{
+      margin:0 0 10px;
+      font-size:clamp(26px,5vw,38px);
+    }
+
+    .desc{
+      color:var(--muted);
+      line-height:1.8;
+      margin-bottom:24px;
+      font-size:14px;
+    }
+
+    label{
+      display:block;
+      margin:18px 0 8px;
+      font-weight:700;
+      font-size:14px;
+    }
+
+    input,
+    textarea{
+      width:100%;
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:14px 16px;
+      font-size:15px;
+      outline:none;
+      transition:.2s;
+      background:white;
+    }
+
+    input:focus,
+    textarea:focus{
+      border-color:var(--main);
+      box-shadow:0 0 0 4px rgba(29,155,240,.15);
+    }
+
+    textarea{
+      min-height:180px;
+      resize:vertical;
+      line-height:1.7;
+    }
+
+    .count{
+      text-align:right;
+      margin-top:6px;
+      color:var(--muted);
+      font-size:12px;
+    }
+
+    .buttons{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:20px;
+    }
+
+    button,
+    .linkbtn{
+      border:none;
+      border-radius:999px;
+      padding:13px 18px;
+      font-weight:800;
+      cursor:pointer;
+      font-size:14px;
+      text-decoration:none;
+      transition:.15s;
+    }
+
+    button:active,
+    .linkbtn:active{
+      transform:scale(.98);
+    }
+
+    .mainbtn{
+      color:white;
+      background:linear-gradient(135deg,var(--main),var(--main2));
+      box-shadow:0 10px 24px rgba(29,155,240,.28);
+    }
+
+    .subbtn{
+      background:#edf7ff;
+      color:var(--main);
+    }
+
+    .ghost{
+      background:#f3f7fb;
+      color:#567;
+    }
+
+    .result{
+      display:none;
+      margin-top:26px;
+      background:#f5fbff;
+      border:1px solid var(--border);
+      border-radius:20px;
+      padding:18px;
+    }
+
+    .result.active{
+      display:block;
+    }
+
+    .result-title{
+      font-weight:800;
+      margin-bottom:12px;
+    }
+
+    .urlbox{
+      background:white;
+      border:1px dashed #abd6f7;
+      border-radius:14px;
+      padding:14px;
+      word-break:break-all;
+      line-height:1.7;
+      font-size:13px;
+    }
+
+    .error{
+      display:none;
+      margin-top:18px;
+      padding:14px;
+      border-radius:14px;
+      background:#fff0f0;
+      color:#d33;
+      border:1px solid #ffcfcf;
+      line-height:1.7;
+      font-size:14px;
+    }
+
+    .error.active{
+      display:block;
+    }
+
+    .note{
+      margin-top:18px;
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.8;
+    }
+  </style>
+</head>
+
+<body>
+
+  <main class="card">
+
+    <h1>XリプURLメーカー</h1>
+
+    <p class="desc">
+      XのポストURLとリプしたい文章を入力すると、
+      「返信画面を開く専用URL」を自動生成できます。
+    </p>
+
+    <label>① XのポストURL</label>
+
+    <input
+      id="postUrl"
+      type="url"
+      placeholder="https://x.com/xxxxx/status/1234567890"
+    >
+
+    <label>② リプしたい文章</label>
+
+    <textarea
+      id="replyText"
+      placeholder="ここにリプ文を入力"
+    ></textarea>
+
+    <div class="count">
+      <span id="charCount">0</span>文字
+    </div>
+
+    <div class="buttons">
+      <button class="mainbtn" id="startBtn">
+        スタート
+      </button>
+
+      <button class="ghost" id="clearBtn">
+        クリア
+      </button>
+    </div>
+
+    <div class="error" id="errorBox"></div>
+
+    <section class="result" id="resultBox">
+
+      <div class="result-title">
+        完成URL
+      </div>
+
+      <div class="urlbox" id="resultUrl"></div>
+
+      <div class="buttons">
+
+        <button class="subbtn" id="copyBtn">
+          URLをコピー
+        </button>
+
+        <a
+          class="linkbtn mainbtn"
+          id="openBtn"
+          href="#"
+          target="_blank"
+        >
+          リプ画面を開く
+        </a>
+
+      </div>
+
+    </section>
+
+    <p class="note">
+      ※ GitHub Pagesにそのまま置くだけで使えます。
+    </p>
+
+  </main>
+
+  <script>
+
+    const postUrl = document.getElementById("postUrl");
+    const replyText = document.getElementById("replyText");
+
+    const startBtn = document.getElementById("startBtn");
+    const clearBtn = document.getElementById("clearBtn");
+
+    const resultBox = document.getElementById("resultBox");
+    const resultUrl = document.getElementById("resultUrl");
+
+    const copyBtn = document.getElementById("copyBtn");
+    const openBtn = document.getElementById("openBtn");
+
+    const errorBox = document.getElementById("errorBox");
+
+    const charCount = document.getElementById("charCount");
+
+    function getTweetId(url){
+
+      const match = url.match(/status\/(\d+)/);
+
+      return match ? match[1] : "";
+
+    }
+
+    function showError(msg){
+
+      errorBox.textContent = msg;
+
+      errorBox.classList.add("active");
+
+      resultBox.classList.remove("active");
+
+    }
+
+    function hideError(){
+
+      errorBox.classList.remove("active");
+
+    }
+
+    function generateUrl(){
+
+      hideError();
+
+      const url = postUrl.value.trim();
+
+      const text = replyText.value.trim();
+
+      const tweetId = getTweetId(url);
+
+      if(!url){
+
+        showError("XのURLを入力してください。");
+
+        return;
+
+      }
+
+      if(!tweetId){
+
+        showError("投稿IDを取得できませんでした。");
+
+        return;
+
+      }
+
+      if(!text){
+
+        showError("リプ文を入力してください。");
+
+        return;
+
+      }
+
+      const encoded = encodeURIComponent(text);
+
+      const finalUrl =
+        `https://twitter.com/intent/tweet?in_reply_to=${tweetId}&text=${encoded}`;
+
+      resultUrl.textContent = finalUrl;
+
+      openBtn.href = finalUrl;
+
+      resultBox.classList.add("active");
+
+    }
+
+    startBtn.addEventListener("click",generateUrl);
+
+    clearBtn.addEventListener("click",()=>{
+
+      postUrl.value = "";
+
+      replyText.value = "";
+
+      charCount.textContent = "0";
+
+      hideError();
+
+      resultBox.classList.remove("active");
+
+    });
+
+    replyText.addEventListener("input",()=>{
+
+      charCount.textContent = replyText.value.length;
+
+    });
+
+    copyBtn.addEventListener("click",async()=>{
+
+      const text = resultUrl.textContent;
+
+      if(!text) return;
+
+      try{
+
+        await navigator.clipboard.writeText(text);
+
+        copyBtn.textContent = "コピーしました！";
+
+        setTimeout(()=>{
+
+          copyBtn.textContent = "URLをコピー";
+
+        },1500);
+
+      }catch{
+
+        showError("コピーに失敗しました。");
+
+      }
+
+    });
+
+  </script>
+
+</body>
+</html>
